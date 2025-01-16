@@ -1,0 +1,14 @@
+torch
+numpy
+matplotlib
+ipykernel
+scikit-learn
+torchvision
+tqdm
+pandas
+torchmetrics
+mlxtend
+requests
+pathlib
+Pillow
+torchinfo
