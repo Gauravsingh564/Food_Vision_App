@@ -14,7 +14,7 @@ if SCRIPT not in sys.path:
     sys.path.append(SCRIPT)
 
 # swap out TinyVGG for your EfficientNet builder
-from Effnet_B0_Model_Builder import create_transfer_model
+from Effnet_Model_Builder import create_transfer_model
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1️⃣ Config
@@ -34,7 +34,6 @@ def load_model(device):
     if not os.path.exists(MODEL_PATH):
         st.error(f"Model not found at {MODEL_PATH}")
         return None
-    # instantiate EfficientNet-B0 with your builder
     model = create_transfer_model(
         num_classes=len(CLASS_NAMES),
         pretrained=False,
@@ -49,19 +48,12 @@ def load_model(device):
 # ──────────────────────────────────────────────────────────────────────────────
 # 3️⃣ Inference
 # ──────────────────────────────────────────────────────────────────────────────
-def predict_image(img: Image.Image, model, device):
-    preprocess = transforms.Compose([
+def preprocess_image(img: Image.Image):
+    return transforms.Compose([
         transforms.Resize(IMG_SIZE),
         transforms.ToTensor(),
         transforms.Normalize(NORMALIZE_MEAN, NORMALIZE_STD),
-    ])
-    x = preprocess(img).unsqueeze(0).to(device)
-    with torch.no_grad():
-        logits = model(x)
-        probs  = torch.softmax(logits, dim=1)[0]
-    idx  = probs.argmax().item()
-    conf = probs[idx].item()
-    return CLASS_NAMES[idx], conf
+    ])(img).unsqueeze(0)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 4️⃣ UI
@@ -84,13 +76,17 @@ def main():
     st.image(img, use_column_width=True, caption="Your upload")
 
     with st.spinner("Predicting…"):
-        label, conf = predict_image(img, model, device)
-
+        x = preprocess_image(img).to(device)
+        with torch.no_grad():
+            outputs = model(x)
+            probs   = torch.softmax(outputs, dim=1)[0].cpu().numpy()
+        idx  = int(probs.argmax())
+        conf = float(probs[idx])
+        label = CLASS_NAMES[idx]
+    
     st.success(f"Prediction: **{label}** ({conf*100:.2f}%)")
-    # optional: show full probability distribution
-    probs = {CLASS_NAMES[i]: float(torch.softmax(model(transforms.Normalize(NORMALIZE_MEAN, NORMALIZE_STD)(transforms.ToTensor()(img).unsqueeze(0).to(device)))[0][i])) 
-             for i in range(len(CLASS_NAMES))}
-    st.bar_chart(probs)
+    # Show bar chart of probabilities
+    st.bar_chart({CLASS_NAMES[i]: probs[i] for i in range(len(CLASS_NAMES))})
 
 if __name__ == "__main__":
     main()
