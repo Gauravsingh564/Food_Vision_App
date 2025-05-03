@@ -45,9 +45,33 @@ def load_model(device):
     return model
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 3️⃣ Inference
+# 3️⃣ CSS & Background
 # ──────────────────────────────────────────────────────────────────────────────
+# Place a background image in the 'assets' folder named background.jpg or use an external URL
+BACKGROUND_URL = "https://img.freepik.com/premium-vector/world-food-day-festivity-background_608781-788.jpg?w=1380"
 
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        background: url('{BACKGROUND_URL}') no-repeat center center fixed;
+        background-size: cover;
+    }}
+    .appview-container .main > div {{
+        max-width: 800px;
+        margin: auto;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 1rem;
+        border-radius: 10px;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 4️⃣ Inference & UI
+# ──────────────────────────────────────────────────────────────────────────────
 def preprocess_image(img: Image.Image):
     return transforms.Compose([
         transforms.Resize(IMG_SIZE),
@@ -55,39 +79,11 @@ def preprocess_image(img: Image.Image):
         transforms.Normalize(NORMALIZE_MEAN, NORMALIZE_STD),
     ])(img).unsqueeze(0)
 
-# ──────────────────────────────────────────────────────────────────────────────
-# 4️⃣ UI
-# ──────────────────────────────────────────────────────────────────────────────
 
 def main():
     st.set_page_config(page_title="Food Vision EfficientNet-B0", layout="centered")
-
-    # Optionally constrain overall app width via CSS
-    st.markdown(
-        """
-        <style>
-        .appview-container .main > div {
-            max-width: 500px;
-            margin: auto;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-
-    # Responsive title using custom CSS
-    st.markdown(
-        """
-        <style>
-        .responsive-title {
-            font-size: calc(1rem + 1.5vw) !important;
-            margin-bottom: 0.5rem;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    st.markdown('<h1 class="responsive-title">🍽️ Food Vision with EfficientNet-B0</h1>', unsafe_allow_html=True)
+    
+    st.markdown('<h1 style="text-align:center;">🍽️ Food Vision with EfficientNet-B0</h1>', unsafe_allow_html=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model  = load_model(device)
