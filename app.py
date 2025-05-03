@@ -5,48 +5,40 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-# ─── 0. Ensure we can import from your Script folder ───────────────────────
+# ─── 0. Ensure imports from Script folder ─────────────────────────────────
 HERE = os.path.dirname(os.path.abspath(__file__))
 SCRIPT_PATH = os.path.join(HERE, "Script")
 if SCRIPT_PATH not in sys.path:
     sys.path.append(SCRIPT_PATH)
 
-# ─── 1. Import your transfer‐learning builder ─────────────────────────────
-from Effnet_B0_Model_Builder import create_transfer_model
+# ─── 1. Import TinyVGG from your model_builder ────────────────────────────
+from model_builder import TinyVGG
 
 # ─── 2. Constants ─────────────────────────────────────────────────────────
-MODEL_FILE = "05_going_modular_cell_model.pth"               # your TinyVGG checkpoint
-MODEL_PATH = os.path.join(HERE, "models", MODEL_FILE)        # only look here
+MODEL_FILE = "05_going_modular_cell_model.pth"
+MODEL_PATH = os.path.join(HERE, "models", MODEL_FILE)
 
 IMG_SIZE    = (224, 224)
-CLASS_NAMES = ["pizza", "steak", "sushi"]                    # adjust if needed
+CLASS_NAMES = ["pizza", "steak", "sushi"]  # adjust to your classes
 
-# ─── 3. Load & cache the model ────────────────────────────────────────────
+# ─── 3. Load & cache the model ─────────────────────────────────────────────
 @st.cache_resource
 def load_model(device):
     if not os.path.exists(MODEL_PATH):
-        st.error(f"❌ Model file not found: `{MODEL_PATH}`\n"
-                 "Please make sure your `models/` folder contains\n"
-                 f"- {MODEL_FILE}")
+        st.error(f"Model file not found: {MODEL_PATH}")
         return None
 
-    # build the EfficientNet-B0 head
-    model = create_transfer_model(
-        num_classes=len(CLASS_NAMES),
-        pretrained=False,
-        freeze_base=True,
-        dropout=0.2
-    )
-
-    # load your TinyVGG-trained weights into it
-    # (This will work *only* if your TinyVGG checkpoint matches
-    # the EfficientNet-B0 architecture you’re instantiating here!)
+    # Instantiate the TinyVGG architecture
+    model = TinyVGG(input_shape=3,
+                    hidden_units=10,
+                    output_shape=len(CLASS_NAMES))
+    # Load your trained weights
     state_dict = torch.load(MODEL_PATH, map_location=device)
     model.load_state_dict(state_dict)
     model.to(device).eval()
     return model
 
-# ─── 4. Prediction helper ────────────────────────────────────────────────
+# ─── 4. Prediction helper ─────────────────────────────────────────────────
 def predict_image(img: Image.Image, model: torch.nn.Module, device):
     preprocess = transforms.Compose([
         transforms.Resize(IMG_SIZE),
@@ -59,7 +51,7 @@ def predict_image(img: Image.Image, model: torch.nn.Module, device):
         idx    = torch.argmax(probs).item()
     return CLASS_NAMES[idx], probs[idx].item()
 
-# ─── 5. Streamlit UI ─────────────────────────────────────────────────────
+# ─── 5. Streamlit UI ───────────────────────────────────────────────────────
 def main():
     st.set_page_config(page_title="Food Vision V1.0", layout="wide")
     st.title("🍽️ Food Vision App")
