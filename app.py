@@ -15,14 +15,25 @@ if SCRIPT_PATH not in sys.path:
 from Effnet_B0_Model_Builder import create_transfer_model
 
 # ─── 2. Constants ─────────────────────────────────────────────────────────
-MODEL_FILE  = "efficientnet_b0_food.pth"
-MODEL_PATH  = os.path.join(HERE, "models", MODEL_FILE)
+MODEL_FILE = "efficientnet_b0_food.pth"
+# Try common locations for the model file
+possible_paths = [
+    os.path.join(HERE, "models", MODEL_FILE),
+    os.path.join(HERE, MODEL_FILE),
+    os.path.join(HERE, "Script", MODEL_FILE)
+]
+# Find the first existing path
+MODEL_PATH = next((p for p in possible_paths if os.path.exists(p)), None)
+
 IMG_SIZE    = (224, 224)
 CLASS_NAMES = ["pizza", "steak", "sushi"]  # adjust as needed
 
 # ─── 3. Load & cache the model ─────────────────────────────────────────────
 @st.cache_resource
 def load_model(device):
+    if MODEL_PATH is None:
+        st.error(f"Model file '{MODEL_FILE}' not found. Please place it in the 'models/' folder or project root.")
+        return None
     # instantiate transfer model
     model = create_transfer_model(
         num_classes=len(CLASS_NAMES),
@@ -51,12 +62,14 @@ def predict_image(img: Image.Image, model: torch.nn.Module, device):
 
 # ─── 5. Streamlit UI ───────────────────────────────────────────────────────
 def main():
-    st.set_page_config(page_title="Food Vision (EffNet-B0)", layout="wide")
-    st.title("🍽️ Food Vision App V=1.0")
+    st.set_page_config(page_title="Food Vision V1.0", layout="wide")
+    st.title("🍽️ Food Vision App")
     st.write("Upload an image and I'll classify it!")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model  = load_model(device)
+    if model is None:
+        st.stop()
 
     uploaded = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
     if uploaded is None:
