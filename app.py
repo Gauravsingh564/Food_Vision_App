@@ -67,7 +67,7 @@ def main():
         """
         <style>
         .appview-container .main > div {
-            max-width: 800px;
+            max-width: 500px;
             margin: auto;
         }
         </style>
@@ -80,7 +80,7 @@ def main():
         """
         <style>
         .responsive-title {
-            font-size: calc(1.5rem + 2vw) !important;
+            font-size: calc(1rem + 1.5vw) !important;
             margin-bottom: 0.5rem;
         }
         </style>
