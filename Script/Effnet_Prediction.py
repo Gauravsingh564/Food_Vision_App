@@ -5,7 +5,7 @@ from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 from Effnet_B0_Model_Builder import create_transfer_model
 
-THRESHOLD = 0.39 
+THRESHOLD = 39
 
 def predict_image(model, device, image_path, num_classes, class_names=None):
     transform = transforms.Compose([
