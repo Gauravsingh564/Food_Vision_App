@@ -85,7 +85,7 @@ def preprocess_image(img: Image.Image):
 # 5️⃣ UI
 # ──────────────────────────────────────────────────────────────────────────────
 def main():
-    st.markdown('<h1 style="text-align:center; font-size: calc(1.5rem + 2vw);">🍽️ Food Vision with EfficientNet-B0</h1>', unsafe_allow_html=True)
+    st.markdown('<h1 style="text-align:center; font-size: calc(1rem + 1vw);">🍽️ Food Vision with EfficientNet-B0</h1>', unsafe_allow_html=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model  = load_model(device)
