@@ -15,7 +15,7 @@ if SCRIPT_PATH not in sys.path:
 from Effnet_B0_Model_Builder import create_transfer_model
 
 # ─── 2. Constants ─────────────────────────────────────────────────────────
-MODEL_FILE = "efficientnet_b0_food.pth"
+MODEL_FILE = "05_going_modular_cell_model.pth"
 # Try common locations for the model file
 possible_paths = [
     os.path.join(HERE, "models", MODEL_FILE),
