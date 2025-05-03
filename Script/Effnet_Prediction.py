@@ -5,6 +5,8 @@ from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 from Effnet_B0_Model_Builder import create_transfer_model
 
+THRESHOLD = 0.39 
+
 def predict_image(model, device, image_path, num_classes, class_names=None):
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -13,7 +15,6 @@ def predict_image(model, device, image_path, num_classes, class_names=None):
                              [0.229, 0.224, 0.225])
     ])
 
-    # Try to open the image file
     try:
         image = Image.open(image_path).convert('RGB')
     except (FileNotFoundError, UnidentifiedImageError):
@@ -21,7 +22,6 @@ def predict_image(model, device, image_path, num_classes, class_names=None):
         sys.exit(1)
 
     tensor = transform(image).unsqueeze(0).to(device)
-
     model.eval()
     with torch.no_grad():
         outputs = model(tensor)
@@ -55,10 +55,8 @@ if __name__ == '__main__':
                         help='Match freeze setting used during training')
     args = parser.parse_args()
 
-    # Device setup
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Initialize model and load weights
     model = create_transfer_model(
         num_classes=args.num_classes,
         pretrained=False,
@@ -67,7 +65,6 @@ if __name__ == '__main__':
     model.load_state_dict(torch.load(args.model_path, map_location=device))
     model = model.to(device)
 
-    # Run prediction
     label, confidence = predict_image(
         model, device,
         args.image_path,
@@ -75,10 +72,9 @@ if __name__ == '__main__':
         args.class_names
     )
 
-    # If confidence < 39%
-    if confidence < 0.39:
+    # enforce 40% cutoff
+    if confidence <= THRESHOLD:
         print(f"Low confidence ({confidence*100:.1f}%). Please upload the right image.")
         sys.exit(1)
 
-    # Otherwise, print the prediction
     print(f"Predicted: {label} (Confidence: {confidence*100:.2f}%)")
