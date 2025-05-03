@@ -5,7 +5,7 @@ from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 from Effnet_B0_Model_Builder import create_transfer_model
 
-THRESHOLD_PCT = 39.9  # 40%
+THRESHOLD_PCT = 41.8  # 40%
 
 def predict_image(model, device, image_path):
     preprocess = transforms.Compose([
