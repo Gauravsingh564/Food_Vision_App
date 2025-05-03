@@ -16,7 +16,7 @@ SCRIPT = os.path.join(HERE, "Script")
 if SCRIPT not in sys.path:
     sys.path.append(SCRIPT)
 
-from Effnet_Model_Builder import create_transfer_model
+from Effnet_B0_Model_Builder import create_transfer_model
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1️⃣ Config & Assets
