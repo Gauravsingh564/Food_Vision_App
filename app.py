@@ -52,12 +52,12 @@ def load_model(device):
 # ──────────────────────────────────────────────────────────────────────────────
 BACKGROUND_URL = "https://img.freepik.com/free-vector/hand-drawn-fast-food-background_23-2149013388.jpg?t=st=1746265200~exp=1746268800~hmac=c41f3c4bd8f07c3b4142eacd50828998f6bf2324bd31499259776558f2205a7b&w=1380"
 st.markdown(
-    f"""
+    """
     <style>
-    .stApp {{
-        background: url('{BACKGROUND_URL}') no-repeat center center fixed;
+    .stApp {
+        background: url('{0}') no-repeat center center fixed;
         background-size: cover;
-    }}
+    }
     .appview-container .main > div {
         max-width: 800px;
         margin: auto;
@@ -91,7 +91,7 @@ st.markdown(
         }
     }
     </style>
-    """,
+    """.format(BACKGROUND_URL),
     unsafe_allow_html=True
 )
 
