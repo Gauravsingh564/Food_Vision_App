@@ -19,7 +19,7 @@ if SCRIPT not in sys.path:
 from Effnet_B0_Model_Builder import create_transfer_model
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 1️⃣ Config & Assets
+# 1️⃣ Config
 # ──────────────────────────────────────────────────────────────────────────────
 MODEL_FILE     = "effnet_b0_best.pth"
 MODEL_PATH     = os.path.join(HERE, "models", MODEL_FILE)
@@ -27,9 +27,6 @@ IMG_SIZE       = (224, 224)
 NORMALIZE_MEAN = [0.485, 0.456, 0.406]
 NORMALIZE_STD  = [0.229, 0.224, 0.225]
 CLASS_NAMES    = ["pizza", "steak", "sushi"]
-
-# Animated loader GIF (option 5)
-LOADER_URL     = "https://i.gifer.com/ZZ5H.gif"  # a simple cooking spinner GIF
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 2️⃣ Load model
@@ -53,7 +50,7 @@ def load_model(device):
 # ──────────────────────────────────────────────────────────────────────────────
 # 3️⃣ CSS & Background
 # ──────────────────────────────────────────────────────────────────────────────
-BACKGROUND_URL = "https://img.freepik.com/premium-vector/world-food-day-festivity-background_608781-788.jpg?w=1380"
+BACKGROUND_URL = "https://img.freepik.com/free-vector/hand-drawn-fast-food-background_23-2149013388.jpg?t=st=1746265200~exp=1746268800~hmac=c41f3c4bd8f07c3b4142eacd50828998f6bf2324bd31499259776558f2205a7b&w=1380"
 st.markdown(
     f"""
     <style>
@@ -67,11 +64,6 @@ st.markdown(
         background-color: rgba(255, 255, 255, 0.8);
         padding: 1rem;
         border-radius: 10px;
-    }}
-    /* Dark mode override (option 8) */
-    .dark-mode .appview-container .main > div {{
-        background-color: rgba(0, 0, 0, 0.7) !important;
-        color: white;
     }}
     </style>
     """,
@@ -90,15 +82,9 @@ def preprocess_image(img: Image.Image):
     ])(img).unsqueeze(0)
 
 # ──────────────────────────────────────────────────────────────────────────────
-# 5️⃣ UI & Theme Toggle
+# 5️⃣ UI
 # ──────────────────────────────────────────────────────────────────────────────
 def main():
-    # Theme toggle (option 8)
-    st.sidebar.title("Settings")
-    theme = st.sidebar.selectbox("Theme", ["Light", "Dark"])
-    if theme == "Dark":
-        st.markdown("<body class='dark-mode'>", unsafe_allow_html=True)
-
     st.markdown('<h1 style="text-align:center; font-size: calc(1.5rem + 2vw);">🍽️ Food Vision with EfficientNet-B0</h1>', unsafe_allow_html=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -114,9 +100,6 @@ def main():
     st.image(img, use_column_width=True)
 
     if st.button("Predict 🥄"):
-        # Show loader GIF
-        with st.container():
-            st.image(LOADER_URL, width=100)
         with st.spinner("Classifying…"):
             x = preprocess_image(img).to(device)
             with torch.no_grad():
