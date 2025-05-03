@@ -5,76 +5,67 @@ from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 from Effnet_B0_Model_Builder import create_transfer_model
 
-THRESHOLD = 39
-
-def predict_image(model, device, image_path, num_classes, class_names=None):
-    transform = transforms.Compose([
+def predict_image(model, device, image_path):
+    preprocess = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406],
                              [0.229, 0.224, 0.225])
     ])
-
     try:
-        image = Image.open(image_path).convert('RGB')
+        img = Image.open(image_path).convert('RGB')
     except (FileNotFoundError, UnidentifiedImageError):
-        print(f"Error: Cannot open image at '{image_path}'. Please provide a valid image file.")
+        print(f"Error: Cannot open image at '{image_path}'.")
         sys.exit(1)
 
-    tensor = transform(image).unsqueeze(0).to(device)
+    x = preprocess(img).unsqueeze(0).to(device)
     model.eval()
     with torch.no_grad():
-        outputs = model(tensor)
-        probs = torch.softmax(outputs, dim=1)
+        out = model(x)
+        probs = torch.softmax(out, dim=1)
         conf, pred = torch.max(probs, 1)
-        class_idx = pred.item()
-        confidence = conf.item()
-
-    if class_names:
-        if len(class_names) != num_classes:
-            print("Error: Number of class names does not match num_classes.")
-            sys.exit(1)
-        label = class_names[class_idx]
-    else:
-        label = str(class_idx)
-
-    return label, confidence
+    return pred.item(), conf.item()
 
 if __name__ == '__main__':
+    THRESHOLD = 0.39  # 39%
+
     parser = argparse.ArgumentParser(
         description='Predict with EfficientNet-B0 classifier')
-    parser.add_argument('--model-path', type=str, required=True,
-                        help='Path to trained model weights .pth')
-    parser.add_argument('--image-path', type=str, required=True,
-                        help='Path to input image file')
-    parser.add_argument('--num-classes', type=int, required=True,
-                        help='Number of target classes')
-    parser.add_argument('--class-names', type=str, nargs='+',
-                        help='Optional: list of class names')
-    parser.add_argument('--freeze-base', action='store_true',
-                        help='Match freeze setting used during training')
+    parser.add_argument('--model-path',  required=True,
+                        help='Path to .pth weights')
+    parser.add_argument('--image-path',  required=True,
+                        help='Path to input image')
+    parser.add_argument('--num-classes', type=int, required=True)
+    parser.add_argument('--class-names', nargs='+',
+                        help='List of class names (optional)')
+    parser.add_argument('--freeze-base', action='store_true')
     args = parser.parse_args()
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
     model = create_transfer_model(
         num_classes=args.num_classes,
         pretrained=False,
         freeze_base=args.freeze_base
     )
     model.load_state_dict(torch.load(args.model_path, map_location=device))
-    model = model.to(device)
+    model.to(device)
 
-    label, confidence = predict_image(
-        model, device,
-        args.image_path,
-        args.num_classes,
-        args.class_names
-    )
+    idx, confidence = predict_image(model, device, args.image_path)
 
-    # enforce 40% cutoff
+    # DEBUG: show raw confidence and threshold
+    print(f"[DEBUG] confidence={confidence:.3f}, threshold={THRESHOLD:.3f}")
+
     if confidence <= THRESHOLD:
-        print(f"Low confidence ({confidence*100:.1f}%). Please upload the right image.")
+        print("Please upload the right image.")
         sys.exit(1)
+
+    # map to name if provided
+    if args.class_names:
+        if len(args.class_names) != args.num_classes:
+            print("Error: class-names length mismatch.")
+            sys.exit(1)
+        label = args.class_names[idx]
+    else:
+        label = str(idx)
 
     print(f"Predicted: {label} (Confidence: {confidence*100:.2f}%)")
