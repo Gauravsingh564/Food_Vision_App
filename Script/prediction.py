@@ -15,22 +15,23 @@ if HERE not in sys.path:
 from model_builder import TinyVGG
 
 # ─── Constants ─────────────────────────────────────────────────────────────
-MODEL_FILE = "05_going_modular_script_mode_tinyvgg_model.pth"
-MODEL_PATH = os.path.abspath(os.path.join(HERE, "..", "models", MODEL_FILE))
-IMG_SIZE   = (64, 64)  # match training size
-MEAN       = [0.485, 0.456, 0.406]  # training normalization mean
-STD        = [0.229, 0.224, 0.225]  # training normalization std
+MODEL_FILE  = "05_going_modular_script_mode_tinyvgg_model.pth"
+MODEL_PATH  = os.path.abspath(os.path.join(HERE, "..", "models", MODEL_FILE))
+IMG_SIZE    = (64, 64)  # match training size
+MEAN        = [0.485, 0.456, 0.406]  # training normalization mean
+STD         = [0.229, 0.224, 0.225]  # training normalization std
 CLASS_NAMES = ["pizza", "steak", "sushi"]
 
 # ─── Load model utility ────────────────────────────────────────────────────
 def load_model(device):
     if not os.path.exists(MODEL_PATH):
         raise FileNotFoundError(f"Checkpoint not found: {MODEL_PATH}")
-    # Instantiate TinyVGG with the same hidden_units as in training (10)
-    model = TinyVGG(input_shape=3,
-                    hidden_units=10,
-                    output_shape=len(CLASS_NAMES),
-                    dropout_p=0.4)
+    # Instantiate TinyVGG with hidden_units matching your checkpoint (10)
+    model = TinyVGG(
+        input_shape=3,
+        hidden_units=10,
+        output_shape=len(CLASS_NAMES)
+    )
     state_dict = torch.load(MODEL_PATH, map_location=device)
     model.load_state_dict(state_dict)
     model.to(device).eval()
