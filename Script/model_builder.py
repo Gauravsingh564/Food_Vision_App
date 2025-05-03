@@ -1,45 +1,50 @@
-# Script/model_builder.py
-
 import torch
 from torch import nn
 
 class TinyVGG(nn.Module):
-    def __init__(self,
-                 input_shape: int,
-                 hidden_units: int = 10,
-                 output_shape: int = 3):
+    """
+    A TinyVGG convolutional network with two convolutional blocks
+    and dynamic flatten size computation for compatibility.
+    """
+    def __init__(self, input_shape: int,
+                 hidden_units: int,
+                 output_shape: int,
+                 img_size: int = 64):
         super().__init__()
 
-        # ── Feature extractor ────────────────────────────
-        self.features = nn.Sequential(
-            # Block 1
-            nn.Conv2d(input_shape, hidden_units, 3, padding=1),
+        # Conv Block 1
+        self.conv_block_1 = nn.Sequential(
+            nn.Conv2d(input_shape, hidden_units, kernel_size=3, stride=1, padding=0),
             nn.ReLU(),
-            nn.MaxPool2d(2),    # e.g. 64→32
-            # Block 2
-            nn.Conv2d(hidden_units, hidden_units*2, 3, padding=1),
+            nn.Conv2d(hidden_units, hidden_units, kernel_size=3, stride=1, padding=0),
             nn.ReLU(),
-            nn.MaxPool2d(2),    # 32→16
-            # Block 3
-            nn.Conv2d(hidden_units*2, hidden_units*4, 3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(2),    # 16→8
-            # Global pool → 1×1
-            nn.AdaptiveAvgPool2d(1)
+            nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
-        # ── Compute flatten size dynamically ─────────────
-        with torch.no_grad():
-            dummy = torch.zeros(1, input_shape, 64, 64)  # replace 64 if you trained on a different size
-            feat = self.features(dummy)
-            n_feats = feat.numel() // feat.shape[0]
+        # Conv Block 2
+        self.conv_block_2 = nn.Sequential(
+            nn.Conv2d(hidden_units, hidden_units, kernel_size=3, stride=1, padding=0),
+            nn.ReLU(),
+            nn.Conv2d(hidden_units, hidden_units, kernel_size=3, stride=1, padding=0),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=2, stride=2)
+        )
 
-        # ── Classifier head ───────────────────────────────
+        # Dynamically compute flatten size
+        with torch.no_grad():
+            dummy = torch.zeros(1, input_shape, img_size, img_size)
+            x = self.conv_block_1(dummy)
+            x = self.conv_block_2(x)
+            flatten_size = x.numel() // x.shape[0]
+
+        # Classifier
         self.classifier = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(n_feats, output_shape)
+            nn.Linear(in_features=flatten_size, out_features=output_shape)
         )
 
     def forward(self, x):
-        x = self.features(x)
-        return self.classifier(x)
+        x = self.conv_block_1(x)
+        x = self.conv_block_2(x)
+        x = self.classifier(x)
+        return x
