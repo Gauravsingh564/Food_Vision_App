@@ -27,6 +27,7 @@ IMG_SIZE       = (224, 224)
 NORMALIZE_MEAN = [0.485, 0.456, 0.406]
 NORMALIZE_STD  = [0.229, 0.224, 0.225]
 CLASS_NAMES    = ["pizza", "steak", "sushi"]
+THRESHOLD      = 0.399  # 39.9%
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 2️⃣ Load model
@@ -50,16 +51,14 @@ def load_model(device):
 # ──────────────────────────────────────────────────────────────────────────────
 # 3️⃣ CSS & Background
 # ──────────────────────────────────────────────────────────────────────────────
-BACKGROUND_URL = "https://img.freepik.com/free-vector/hand-drawn-fast-food-background_23-2149013388.jpg?t=st=1746265200~exp=1746268800~hmac=c41f3c4bd8f07c3b4142eacd50828998f6bf2324bd31499259776558f2205a7b&w=1380"
+BACKGROUND_URL = "https://img.freepik.com/free-vector/hand-drawn-fast-food-background_23-2149013388.jpg"
 st.markdown(
     f"""
     <style>
     .stApp {{ background: url('{BACKGROUND_URL}') no-repeat center center fixed; background-size: cover; }}
     .appview-container .main > div {{ max-width: 800px; margin: auto; background-color: rgba(255, 255, 255, 0.95); padding: 1rem; border-radius: 10px; color: #000; }}
-    /* Background overlay to dim image for better legibility */
     .stApp::before {{ content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.3); z-index: 0; }}
     .appview-container .main > div {{ position: relative; z-index: 1; }}
-    /* Responsive adjustments for mobile */
     @media (max-width: 600px) {{ .appview-container .main > div {{ padding: 0.5rem; }} h1 {{ font-size: calc(1.2rem + 4vw) !important; }} }}
     </style>
     """,
@@ -69,7 +68,6 @@ st.markdown(
 # ──────────────────────────────────────────────────────────────────────────────
 # 4️⃣ Inference Helper
 # ──────────────────────────────────────────────────────────────────────────────
-
 def preprocess_image(img: Image.Image):
     return transforms.Compose([
         transforms.Resize(IMG_SIZE),
@@ -81,14 +79,22 @@ def preprocess_image(img: Image.Image):
 # 5️⃣ UI
 # ──────────────────────────────────────────────────────────────────────────────
 def main():
-    st.markdown('<h1 style="text-align:center; font-size: calc(1rem + 1.6vw);">🍽️ Food Vision with EfficientNet-B0</h1>', unsafe_allow_html=True)
+    st.markdown(
+        '<h1 style="text-align:center; font-size: calc(1rem + 1.6vw);">'
+        '🍽️ Food Vision with EfficientNet-B0</h1>',
+        unsafe_allow_html=True
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model  = load_model(device)
     if model is None:
         return
 
-    uploaded = st.file_uploader("Choose an image", type=["jpg", "jpeg", "png"], help="or drag & drop here")
+    uploaded = st.file_uploader(
+        "Choose an image",
+        type=["jpg", "jpeg", "png"],
+        help="or drag & drop here"
+    )
     if not uploaded:
         return
 
@@ -103,7 +109,14 @@ def main():
                 probs   = torch.softmax(outputs, dim=1)[0].cpu().numpy()
             idx  = int(probs.argmax())
             conf = float(probs[idx])
-            label = CLASS_NAMES[idx]
+
+        # Error handling for low confidence
+        if conf < THRESHOLD:
+            st.error("Low confidence. Please upload the right image.")
+            return
+
+        # Otherwise, show prediction
+        label = CLASS_NAMES[idx]
         st.success(f"Prediction: {label} ({conf*100:.2f}%)")
 
 if __name__ == "__main__":
