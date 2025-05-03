@@ -52,46 +52,17 @@ def load_model(device):
 # ──────────────────────────────────────────────────────────────────────────────
 BACKGROUND_URL = "https://img.freepik.com/free-vector/hand-drawn-fast-food-background_23-2149013388.jpg?t=st=1746265200~exp=1746268800~hmac=c41f3c4bd8f07c3b4142eacd50828998f6bf2324bd31499259776558f2205a7b&w=1380"
 st.markdown(
-    """
+    f"""
     <style>
-    .stApp {
-        background: url('{0}') no-repeat center center fixed;
-        background-size: cover;
-    }
-    .appview-container .main > div {
-        max-width: 800px;
-        margin: auto;
-        background-color: rgba(255, 255, 255, 0.95);
-        padding: 1rem;
-        border-radius: 10px;
-        color: #000;
-    }
+    .stApp {{ background: url('{BACKGROUND_URL}') no-repeat center center fixed; background-size: cover; }}
+    .appview-container .main > div {{ max-width: 800px; margin: auto; background-color: rgba(255, 255, 255, 0.95); padding: 1rem; border-radius: 10px; color: #000; }}
     /* Background overlay to dim image for better legibility */
-    .stApp::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0,0,0,0.3);
-        z-index: 0;
-    }
-    .appview-container .main > div {
-        position: relative;
-        z-index: 1;
-    }
+    .stApp::before {{ content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.3); z-index: 0; }}
+    .appview-container .main > div {{ position: relative; z-index: 1; }}
     /* Responsive adjustments for mobile */
-    @media (max-width: 600px) {
-        .appview-container .main > div {
-            padding: 0.5rem;
-        }
-        h1 {
-            font-size: calc(1.2rem + 4vw) !important;
-        }
-    }
+    @media (max-width: 600px) {{ .appview-container .main > div {{ padding: 0.5rem; }} h1 {{ font-size: calc(1.2rem + 4vw) !important; }} }}
     </style>
-    """.format(BACKGROUND_URL),
+    """,
     unsafe_allow_html=True
 )
 
