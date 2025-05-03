@@ -5,7 +5,7 @@ from timeit import default_timer as timer
 import data_setup,engine,model_builder,utils
 from pathlib import Path
 
-NUM_EPOCHS=10
+NUM_EPOCHS=40
 BATCH_SIZE=32
 HIDDEN_UNITS=10
 LEARNING_RATE=0.001
