@@ -1,48 +1,45 @@
-# Script/prediction.py
+# app.py
 
-import os
-import sys
-import argparse
+import os, sys
+import streamlit as st
 import torch
 from PIL import Image
 from torchvision import transforms
 
-# Ensure we can import TinyVGG from model_builder
-HERE = os.path.dirname(os.path.abspath(__file__))
-if HERE not in sys.path:
-    sys.path.append(HERE)
+# 0. Allow import from Script/
+HERE = os.path.dirname(__file__)
+SCRIPT = os.path.join(HERE, "Script")
+if SCRIPT not in sys.path:
+    sys.path.append(SCRIPT)
 
 from model_builder import TinyVGG
 
-# ─── Constants ─────────────────────────────────────────────────────────────
-MODEL_FILE = "05_going_modular_script_mode_tinyvgg_model.pth"
-MODEL_PATH = os.path.abspath(os.path.join(HERE, "..", "models", MODEL_FILE))
-IMG_SIZE   = (64, 64)  # match training size
-MEAN       = [0.485, 0.456, 0.406]  # training normalization mean
-STD        = [0.229, 0.224, 0.225]  # training normalization std
-CLASS_NAMES = ["pizza", "steak", "sushi"]
+# 1. Constants
+MODEL_FILE   = "05_going_modular_cell_model.pth"
+MODEL_PATH   = os.path.join(HERE, "models", MODEL_FILE)
+IMG_SIZE     = (64, 64)                         # match training
+NORMALIZE_MEAN = [0.485, 0.456, 0.406]          # match training
+NORMALIZE_STD  = [0.229, 0.224, 0.225]
+CLASS_NAMES  = ["pizza", "steak", "sushi"]
 
-# ─── Load model utility ────────────────────────────────────────────────────
+# 2. Load & cache
+@st.cache_resource
 def load_model(device):
     if not os.path.exists(MODEL_PATH):
-        raise FileNotFoundError(f"Checkpoint not found: {MODEL_PATH}")
-    # Instantiate TinyVGG with the same hidden_units as in training (10)
-    model = TinyVGG(input_shape=3,
-                    hidden_units=10,
-                    output_shape=len(CLASS_NAMES),
-                    dropout_p=0.4)
-    state_dict = torch.load(MODEL_PATH, map_location=device)
-    model.load_state_dict(state_dict)
+        st.error(f"Model not found at `{MODEL_PATH}`")
+        return None
+    model = TinyVGG(input_shape=3, hidden_units=10, output_shape=len(CLASS_NAMES))
+    state = torch.load(MODEL_PATH, map_location=device)
+    model.load_state_dict(state)
     model.to(device).eval()
     return model
 
-# ─── Single image prediction ───────────────────────────────────────────────
+# 3. Prediction helper
 def predict_image(img: Image.Image, model, device):
-    # match training preprocessing: resize to 64x64, tensor conversion, normalization
     preprocess = transforms.Compose([
-        transforms.Resize((64, 64)),
+        transforms.Resize(IMG_SIZE),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        transforms.Normalize(NORMALIZE_MEAN, NORMALIZE_STD)
     ])
     x = preprocess(img).unsqueeze(0).to(device)
     with torch.no_grad():
@@ -51,21 +48,29 @@ def predict_image(img: Image.Image, model, device):
         idx    = torch.argmax(probs).item()
     return CLASS_NAMES[idx], probs[idx].item()
 
-# ─── CLI entrypoint ─────────────────────────────────────────────────────────
+# 4. Streamlit UI
 def main():
-    parser = argparse.ArgumentParser(description="Run TinyVGG predictions on images")
-    parser.add_argument("images", nargs="+", help="Path(s) to image file(s)")
-    args = parser.parse_args()
+    st.set_page_config(page_title="Food Vision TinyVGG", layout="wide")
+    st.title("🍽️ Food Vision App")
+    st.write("Upload an image of pizza, steak, or sushi.")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model  = load_model(device)
+    if model is None:
+        return
 
-    for img_path in args.images:
-        if not os.path.isfile(img_path):
-            print(f"[SKIP] File not found: {img_path}")
-            continue
-        label, conf = predict_image(img_path, model, device)
-        print(f"{os.path.basename(img_path)} → {label} ({conf:.2f})")
+    uploaded = st.file_uploader("", type=["jpg", "jpeg", "png"])
+    if not uploaded:
+        st.info("Please upload an image.")
+        return
+
+    img = Image.open(uploaded).convert("RGB")
+    st.image(img, caption="Your upload", use_column_width=True)
+
+    with st.spinner("Predicting…"):
+        label, conf = predict_image(img, model, device)
+
+    st.success(f"Prediction: **{label}** ({conf:.2f})")
 
 if __name__ == "__main__":
     main()
