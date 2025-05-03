@@ -13,7 +13,6 @@ SCRIPT = os.path.join(HERE, "Script")
 if SCRIPT not in sys.path:
     sys.path.append(SCRIPT)
 
-# swap out TinyVGG for your EfficientNet builder
 from Effnet_B0_Model_Builder import create_transfer_model
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -61,7 +60,6 @@ def preprocess_image(img: Image.Image):
 def main():
     st.set_page_config(page_title="Food Vision EfficientNet-B0", layout="wide")
     st.title("🍽️ Food Vision with EfficientNet-B0")
-    st.write("Upload a pizza, steak, or sushi image to classify.")
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model  = load_model(device)
@@ -73,20 +71,18 @@ def main():
         return
 
     img = Image.open(uploaded).convert("RGB")
-    st.image(img, use_column_width=True, caption="Your upload")
+    st.image(img, use_column_width=True)
 
-    with st.spinner("Predicting…"):
-        x = preprocess_image(img).to(device)
-        with torch.no_grad():
-            outputs = model(x)
-            probs   = torch.softmax(outputs, dim=1)[0].cpu().numpy()
-        idx  = int(probs.argmax())
-        conf = float(probs[idx])
-        label = CLASS_NAMES[idx]
-    
-    st.success(f"Prediction: **{label}** ({conf*100:.2f}%)")
-    # Show bar chart of probabilities
-    st.bar_chart({CLASS_NAMES[i]: probs[i] for i in range(len(CLASS_NAMES))})
+    if st.button("Predict"):
+        with st.spinner("Classifying…"):
+            x = preprocess_image(img).to(device)
+            with torch.no_grad():
+                outputs = model(x)
+                probs   = torch.softmax(outputs, dim=1)[0].cpu().numpy()
+            idx  = int(probs.argmax())
+            conf = float(probs[idx])
+            label = CLASS_NAMES[idx]
+        st.success(f"Prediction: {label} ({conf*100:.2f}%)")
 
 if __name__ == "__main__":
     main()
