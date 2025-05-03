@@ -99,7 +99,7 @@ def main():
         return
 
     img = Image.open(uploaded).convert("RGB")
-    st.image(img, use_column_width=True)
+    st.image(img, use_container_width=True)  # updated here
 
     if st.button("Predict 🥄"):
         with st.spinner("Classifying…"):
