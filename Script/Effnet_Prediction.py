@@ -5,9 +5,7 @@ from PIL import Image, UnidentifiedImageError
 from torchvision import transforms
 from Effnet_B0_Model_Builder import create_transfer_model
 
-
 def predict_image(model, device, image_path, num_classes, class_names=None):
-    # standard preprocessing
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
         transforms.ToTensor(),
@@ -15,17 +13,15 @@ def predict_image(model, device, image_path, num_classes, class_names=None):
                              [0.229, 0.224, 0.225])
     ])
 
-    # 1. Try to open the image
+    # Try to open the image file
     try:
         image = Image.open(image_path).convert('RGB')
     except (FileNotFoundError, UnidentifiedImageError):
-        print(f"Error: Cannot open image at '{image_path}'. "
-              "Please provide a valid image file.")
+        print(f"Error: Cannot open image at '{image_path}'. Please provide a valid image file.")
         sys.exit(1)
 
     tensor = transform(image).unsqueeze(0).to(device)
 
-    # 2. Forward pass
     model.eval()
     with torch.no_grad():
         outputs = model(tensor)
@@ -34,7 +30,6 @@ def predict_image(model, device, image_path, num_classes, class_names=None):
         class_idx = pred.item()
         confidence = conf.item()
 
-    # 3. Lookup label if names provided
     if class_names:
         if len(class_names) != num_classes:
             print("Error: Number of class names does not match num_classes.")
@@ -44,7 +39,6 @@ def predict_image(model, device, image_path, num_classes, class_names=None):
         label = str(class_idx)
 
     return label, confidence
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -59,32 +53,32 @@ if __name__ == '__main__':
                         help='Optional: list of class names')
     parser.add_argument('--freeze-base', action='store_true',
                         help='Match freeze setting used during training')
-    parser.add_argument('--threshold', type=float, default=0.5,
-                        help='Minimum confidence to accept a prediction')
     args = parser.parse_args()
 
-    # Device selection
+    # Device setup
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    # Model init & load
-    model = create_transfer_model(num_classes=args.num_classes,
-                                  pretrained=False,
-                                  freeze_base=args.freeze_base)
-    model.load_state_dict(torch.load(args.model_path,
-                                     map_location=device))
+    # Initialize model and load weights
+    model = create_transfer_model(
+        num_classes=args.num_classes,
+        pretrained=False,
+        freeze_base=args.freeze_base
+    )
+    model.load_state_dict(torch.load(args.model_path, map_location=device))
     model = model.to(device)
 
-    # Predict
+    # Run prediction
     label, confidence = predict_image(
-        model, device, args.image_path,
-        args.num_classes, args.class_names
+        model, device,
+        args.image_path,
+        args.num_classes,
+        args.class_names
     )
 
-    # 4. Check confidence threshold
-    if confidence < args.threshold:
-        print(f"Low confidence ({confidence*100:.1f}%). "
-              "Please upload the right image.")
+    # If confidence < 39%
+    if confidence < 0.39:
+        print(f"Low confidence ({confidence*100:.1f}%). Please upload the right image.")
         sys.exit(1)
 
-    # 5. Otherwise, show the result
+    # Otherwise, print the prediction
     print(f"Predicted: {label} (Confidence: {confidence*100:.2f}%)")
