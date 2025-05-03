@@ -7,7 +7,7 @@ from torchvision import transforms
 
 # ─── 0. Ensure imports from Script folder ─────────────────────────────────
 HERE = os.path.dirname(os.path.abspath(__file__))
-SCRIPT_PATH = os.path.join(HERE, "Script")
+SCRIPT_PATH = os.path.join(HERE, "models")
 if SCRIPT_PATH not in sys.path:
     sys.path.append(SCRIPT_PATH)
 
