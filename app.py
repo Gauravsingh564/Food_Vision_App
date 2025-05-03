@@ -13,7 +13,7 @@ SCRIPT = os.path.join(HERE, "Script")
 if SCRIPT not in sys.path:
     sys.path.append(SCRIPT)
 
-from Effnet_B0_Model_Builder import create_transfer_model
+from Effnet_Model_Builder import create_transfer_model
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 1️⃣ Config
@@ -47,6 +47,7 @@ def load_model(device):
 # ──────────────────────────────────────────────────────────────────────────────
 # 3️⃣ Inference
 # ──────────────────────────────────────────────────────────────────────────────
+
 def preprocess_image(img: Image.Image):
     return transforms.Compose([
         transforms.Resize(IMG_SIZE),
@@ -57,9 +58,36 @@ def preprocess_image(img: Image.Image):
 # ──────────────────────────────────────────────────────────────────────────────
 # 4️⃣ UI
 # ──────────────────────────────────────────────────────────────────────────────
+
 def main():
-    st.set_page_config(page_title="Food Vision EfficientNet-B0", layout="wide")
-    st.title("🍽️ Food Vision with EfficientNet-B0")
+    st.set_page_config(page_title="Food Vision EfficientNet-B0", layout="centered")
+
+    # Optionally constrain overall app width via CSS
+    st.markdown(
+        """
+        <style>
+        .appview-container .main > div {
+            max-width: 800px;
+            margin: auto;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    # Responsive title using custom CSS
+    st.markdown(
+        """
+        <style>
+        .responsive-title {
+            font-size: calc(1.5rem + 2vw) !important;
+            margin-bottom: 0.5rem;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown('<h1 class="responsive-title">🍽️ Food Vision with EfficientNet-B0</h1>', unsafe_allow_html=True)
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model  = load_model(device)
