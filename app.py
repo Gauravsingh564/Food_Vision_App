@@ -50,7 +50,7 @@ def load_model(device):
 # ──────────────────────────────────────────────────────────────────────────────
 # 3️⃣ CSS & Background
 # ──────────────────────────────────────────────────────────────────────────────
-BACKGROUND_URL = "https://img.freepik.com/premium-vector/top-view-indian-food-illustration_218660-532.jpg?w=740"
+BACKGROUND_URL = "https://img.freepik.com/free-vector/hand-drawn-fast-food-background_23-2149013388.jpg?t=st=1746265200~exp=1746268800~hmac=c41f3c4bd8f07c3b4142eacd50828998f6bf2324bd31499259776558f2205a7b&w=1380"
 st.markdown(
     f"""
     <style>
