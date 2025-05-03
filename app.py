@@ -58,13 +58,38 @@ st.markdown(
         background: url('{BACKGROUND_URL}') no-repeat center center fixed;
         background-size: cover;
     }}
-    .appview-container .main > div {{
+    .appview-container .main > div {
         max-width: 800px;
         margin: auto;
-        background-color: rgba(255, 255, 255, 0.8);
+        background-color: rgba(255, 255, 255, 0.95);
         padding: 1rem;
         border-radius: 10px;
-    }}
+        color: #000;
+    }
+    /* Background overlay to dim image for better legibility */
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.3);
+        z-index: 0;
+    }
+    .appview-container .main > div {
+        position: relative;
+        z-index: 1;
+    }
+    /* Responsive adjustments for mobile */
+    @media (max-width: 600px) {
+        .appview-container .main > div {
+            padding: 0.5rem;
+        }
+        h1 {
+            font-size: calc(1.2rem + 4vw) !important;
+        }
+    }
     </style>
     """,
     unsafe_allow_html=True
