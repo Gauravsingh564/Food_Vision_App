@@ -4,7 +4,6 @@ import streamlit as st
 import torch
 from PIL import Image
 from torchvision import transforms
-
 # Set page config first
 st.set_page_config(page_title="Food Vision EfficientNet-B0", layout="centered")
 
