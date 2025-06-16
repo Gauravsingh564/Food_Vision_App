@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 import torchvision.models as models
-
 def create_transfer_model(num_classes: int,
                           pretrained: bool = True,
                           freeze_base: bool = True,
