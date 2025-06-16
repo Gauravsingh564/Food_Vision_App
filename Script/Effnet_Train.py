@@ -6,8 +6,6 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from Effnet_B0_Model_Builder import create_transfer_model
-
-
 def train(model, device, train_loader, val_loader, criterion, optimizer, epochs, save_path):
     best_acc = 0.0
     for epoch in range(1, epochs + 1):
