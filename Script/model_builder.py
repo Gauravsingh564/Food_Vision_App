@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-
 class TinyVGG(nn.Module):
     """
     A TinyVGG convolutional network with two convolutional blocks
