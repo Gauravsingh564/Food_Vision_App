@@ -9,7 +9,6 @@ NUM_EPOCHS=40
 BATCH_SIZE=32
 HIDDEN_UNITS=10
 LEARNING_RATE=0.001
-
 train_dir="data/pizza_steak_sushi/train"
 test_dir="data/pizza_steak_sushi/test"
 
