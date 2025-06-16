@@ -1,6 +1,5 @@
 from pathlib import Path
 import torch
-
 def save_model(model: torch.nn.Module,
                target_dir: str,
                model_name: str):
