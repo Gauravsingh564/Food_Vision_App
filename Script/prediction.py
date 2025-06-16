@@ -1,5 +1,3 @@
-# Script/prediction.py
-
 import os
 import sys
 import argparse
