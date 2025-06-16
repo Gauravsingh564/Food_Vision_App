@@ -2,7 +2,6 @@ from typing import Dict, List, Tuple
 import torch
 import torch.nn as nn
 from tqdm.auto import tqdm
-
 def train_step(model:nn.Module,
                dataloader:torch.utils.data.DataLoader,
                loss_fn:nn.Module,
